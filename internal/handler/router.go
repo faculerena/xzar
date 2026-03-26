@@ -43,6 +43,12 @@ func NewRouter(cfg *config.Config, store *db.Store, sm *auth.SessionManager, tem
 	uploadsHandler := http.StripPrefix("/uploads/", http.FileServer(http.Dir(filepath.Join(cfg.DataDir, "uploads"))))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Forwarded-Proto") == "http" && !strings.HasPrefix(r.UserAgent(), "curl/") {
+			target := "https://" + r.Host + r.RequestURI
+			http.Redirect(w, r, target, http.StatusMovedPermanently)
+			return
+		}
+
 		host := stripPort(r.Host)
 		subdomain := extractSubdomain(host, cfg.Domain)
 
