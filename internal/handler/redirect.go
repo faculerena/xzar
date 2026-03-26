@@ -21,7 +21,7 @@ func (h *RedirectHandler) HandleSubdomain(w http.ResponseWriter, r *http.Request
 		return
 	}
 	go h.store.IncrementClickCount(sc.ID)
-	h.sendRedirect(w, r, sc.TargetURL)
+	redirectOrProxy(w, r, sc.TargetURL)
 }
 
 func (h *RedirectHandler) HandlePath(w http.ResponseWriter, r *http.Request) {
@@ -36,10 +36,10 @@ func (h *RedirectHandler) HandlePath(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	go h.store.IncrementClickCount(sc.ID)
-	h.sendRedirect(w, r, sc.TargetURL)
+	redirectOrProxy(w, r, sc.TargetURL)
 }
 
-func (h *RedirectHandler) sendRedirect(w http.ResponseWriter, r *http.Request, target string) {
+func redirectOrProxy(w http.ResponseWriter, r *http.Request, target string) {
 	if strings.HasPrefix(r.UserAgent(), "curl/") {
 		resp, err := http.Get(target)
 		if err != nil {

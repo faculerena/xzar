@@ -28,7 +28,7 @@ func (h *HomepageHandler) HandleRoot(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("<!DOCTYPE html><html><head><title>xz.ar</title></head><body><h1>xz.ar</h1></body></html>"))
 			return
 		}
-		http.Redirect(w, r, cfg.RedirectURL, http.StatusFound)
+		redirectOrProxy(w, r, cfg.RedirectURL)
 
 	case model.HomepageModeCarousel:
 		images, err := h.store.ListCarouselImages()
