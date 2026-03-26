@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 	"strings"
 
@@ -20,7 +21,7 @@ func (h *RedirectHandler) HandleSubdomain(w http.ResponseWriter, r *http.Request
 		return
 	}
 	go h.store.IncrementClickCount(sc.ID)
-	http.Redirect(w, r, sc.TargetURL, http.StatusFound)
+	h.sendRedirect(w, r, sc.TargetURL)
 }
 
 func (h *RedirectHandler) HandlePath(w http.ResponseWriter, r *http.Request) {
@@ -35,5 +36,25 @@ func (h *RedirectHandler) HandlePath(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	go h.store.IncrementClickCount(sc.ID)
-	http.Redirect(w, r, sc.TargetURL, http.StatusFound)
+	h.sendRedirect(w, r, sc.TargetURL)
+}
+
+func (h *RedirectHandler) sendRedirect(w http.ResponseWriter, r *http.Request, target string) {
+	if strings.HasPrefix(r.UserAgent(), "curl/") {
+		resp, err := http.Get(target)
+		if err != nil {
+			http.Error(w, "failed to fetch target", http.StatusBadGateway)
+			return
+		}
+		defer resp.Body.Close()
+		for _, key := range []string{"Content-Type", "Content-Length"} {
+			if v := resp.Header.Get(key); v != "" {
+				w.Header().Set(key, v)
+			}
+		}
+		w.WriteHeader(resp.StatusCode)
+		io.Copy(w, resp.Body)
+		return
+	}
+	http.Redirect(w, r, target, http.StatusFound)
 }

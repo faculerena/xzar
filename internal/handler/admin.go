@@ -3,6 +3,8 @@ package handler
 import (
 	"fmt"
 	"html/template"
+	"crypto/rand"
+	"encoding/hex"
 	"io"
 	"net/http"
 	"os"
@@ -71,6 +73,12 @@ func (h *AdminHandler) ShortcutEditForm(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
+func randomSlug(n int) string {
+	b := make([]byte, n)
+	rand.Read(b)
+	return hex.EncodeToString(b)[:n]
+}
+
 var reservedPathSlugs = map[string]bool{
 	"admin": true, "static": true, "uploads": true,
 	"favicon.ico": true, "robots.txt": true,
@@ -85,9 +93,13 @@ func (h *AdminHandler) CreateShortcut(w http.ResponseWriter, r *http.Request) {
 	targetURL := strings.TrimSpace(r.FormValue("target_url"))
 	typ := model.ShortcutType(r.FormValue("type"))
 
-	if slug == "" || targetURL == "" || (typ != model.ShortcutPath && typ != model.ShortcutSubdomain) {
+	if targetURL == "" || (typ != model.ShortcutPath && typ != model.ShortcutSubdomain) {
 		http.Redirect(w, r, "/admin/shortcuts/new?error=invalid", http.StatusSeeOther)
 		return
+	}
+
+	if slug == "" {
+		slug = randomSlug(8)
 	}
 
 	if typ == model.ShortcutPath && reservedPathSlugs[slug] {
