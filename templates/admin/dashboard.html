@@ -1,0 +1,73 @@
+{{define "title"}}Dashboard - xz.ar{{end}}
+{{define "content"}}
+<div class="admin">
+    <header>
+        <h1>xz.ar</h1>
+        <nav>
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/images">Images</a>
+            <form method="POST" action="/admin/logout" style="display:inline">
+                <button type="submit" class="link-btn">Logout</button>
+            </form>
+        </nav>
+    </header>
+
+    {{if .Flash}}<p class="flash">{{.Flash}}</p>{{end}}
+
+    <section>
+        <h2>Homepage</h2>
+        <form method="POST" action="/admin/homepage" class="homepage-form">
+            <label>
+                <input type="radio" name="mode" value="carousel" {{if eq (print .Homepage.Mode) "carousel"}}checked{{end}}>
+                Carousel
+            </label>
+            <label>
+                <input type="radio" name="mode" value="redirect" {{if eq (print .Homepage.Mode) "redirect"}}checked{{end}}>
+                Redirect
+            </label>
+            <label>
+                Redirect URL
+                <input type="url" name="redirect_url" value="{{.Homepage.RedirectURL}}" placeholder="https://...">
+            </label>
+            <button type="submit">Save</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Shortcuts <a href="/admin/shortcuts/new" class="btn btn-sm">+ New</a></h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Slug</th>
+                    <th>Type</th>
+                    <th>Target</th>
+                    <th>Clicks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Shortcuts}}
+                <tr>
+                    <td>
+                        {{if eq (print .Type) "subdomain"}}{{.Slug}}.{{$.Domain}}{{else}}{{$.Domain}}/{{.Slug}}{{end}}
+                    </td>
+                    <td>{{.Type}}</td>
+                    <td class="url-cell"><a href="{{.TargetURL}}" target="_blank">{{.TargetURL}}</a></td>
+                    <td>{{.ClickCount}}</td>
+                    <td>
+                        <a href="/admin/shortcuts/{{.ID}}/edit">Edit</a>
+                        <form method="POST" action="/admin/shortcuts/{{.ID}}/delete" style="display:inline"
+                              onsubmit="return confirm('Delete this shortcut?')">
+                            <button type="submit" class="link-btn danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5">No shortcuts yet.</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </section>
+</div>
+{{end}}
+{{define "scripts"}}{{end}}

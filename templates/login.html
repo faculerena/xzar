@@ -1,0 +1,13 @@
+{{define "title"}}Login - xz.ar{{end}}
+{{define "content"}}
+<div class="login-container">
+    <h1>xz.ar admin</h1>
+    {{if .Error}}<p class="error">Invalid credentials.</p>{{end}}
+    <form method="POST" action="/admin/login">
+        <label>Username<input type="text" name="username" autofocus required></label>
+        <label>Password<input type="password" name="password" required></label>
+        <button type="submit">Login</button>
+    </form>
+</div>
+{{end}}
+{{define "scripts"}}{{end}}

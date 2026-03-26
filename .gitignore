@@ -1,0 +1,23 @@
+# Data
+data/
+*.db
+
+# Credentials
+credentials.json
+
+# Binary
+xzar
+xz.ar
+
+# Go
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db

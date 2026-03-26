@@ -1,0 +1,30 @@
+{{define "title"}}{{.Domain}}{{end}}
+{{define "content"}}
+<div class="carousel">
+    {{range $i, $img := .Images}}
+    <div class="carousel-slide{{if eq $i 0}} active{{end}}">
+        <img src="/uploads/{{$img.Filename}}" alt="">
+    </div>
+    {{else}}
+    <div class="carousel-empty">
+        <h1>{{$.Domain}}</h1>
+    </div>
+    {{end}}
+</div>
+{{end}}
+{{define "scripts"}}
+{{if .Images}}
+<script>
+(function() {
+    var slides = document.querySelectorAll('.carousel-slide');
+    if (slides.length < 2) return;
+    var current = 0;
+    setInterval(function() {
+        slides[current].classList.remove('active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('active');
+    }, 4000);
+})();
+</script>
+{{end}}
+{{end}}

@@ -1,0 +1,35 @@
+{{define "title"}}{{if .Shortcut}}Edit{{else}}New{{end}} Shortcut - xz.ar{{end}}
+{{define "content"}}
+<div class="admin">
+    <header>
+        <h1>xz.ar</h1>
+        <nav>
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/images">Images</a>
+        </nav>
+    </header>
+
+    <h2>{{if .Shortcut}}Edit{{else}}New{{end}} Shortcut</h2>
+
+    <form method="POST" action="{{if .Shortcut}}/admin/shortcuts/{{.Shortcut.ID}}{{else}}/admin/shortcuts{{end}}">
+        <label>
+            Type
+            <select name="type">
+                <option value="path" {{if and .Shortcut (eq (print .Shortcut.Type) "path")}}selected{{end}}>Path ({{.Domain}}/slug)</option>
+                <option value="subdomain" {{if and .Shortcut (eq (print .Shortcut.Type) "subdomain")}}selected{{end}}>Subdomain (slug.{{.Domain}})</option>
+            </select>
+        </label>
+        <label>
+            Slug
+            <input type="text" name="slug" value="{{if .Shortcut}}{{.Shortcut.Slug}}{{end}}" required placeholder="my-link">
+        </label>
+        <label>
+            Target URL
+            <input type="url" name="target_url" value="{{if .Shortcut}}{{.Shortcut.TargetURL}}{{end}}" required placeholder="https://...">
+        </label>
+        <button type="submit">{{if .Shortcut}}Update{{else}}Create{{end}}</button>
+        <a href="/admin">Cancel</a>
+    </form>
+</div>
+{{end}}
+{{define "scripts"}}{{end}}

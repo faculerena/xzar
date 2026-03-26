@@ -1,0 +1,39 @@
+{{define "title"}}Carousel Images - xz.ar{{end}}
+{{define "content"}}
+<div class="admin">
+    <header>
+        <h1>xz.ar</h1>
+        <nav>
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/images">Images</a>
+        </nav>
+    </header>
+
+    {{if .Flash}}<p class="flash">{{.Flash}}</p>{{end}}
+
+    <h2>Carousel Images</h2>
+
+    <form method="POST" action="/admin/images" enctype="multipart/form-data" class="upload-form">
+        <input type="file" name="image" accept="image/gif,image/png,image/jpeg,image/webp" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div class="image-grid">
+        {{range .Images}}
+        <div class="image-card" data-id="{{.ID}}">
+            <img src="/uploads/{{.Filename}}" alt="{{.Original}}">
+            <div class="image-info">
+                <span>{{.Original}}</span>
+                <form method="POST" action="/admin/images/{{.ID}}/delete"
+                      onsubmit="return confirm('Delete this image?')">
+                    <button type="submit" class="link-btn danger">Delete</button>
+                </form>
+            </div>
+        </div>
+        {{else}}
+        <p>No images uploaded yet.</p>
+        {{end}}
+    </div>
+</div>
+{{end}}
+{{define "scripts"}}{{end}}

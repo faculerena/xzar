@@ -1,0 +1,4 @@
+data/
+credentials.json
+*.db
+.git/
