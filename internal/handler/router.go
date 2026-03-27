@@ -12,10 +12,11 @@ import (
 	"xz.ar/internal/db"
 )
 
-func NewRouter(cfg *config.Config, store *db.Store, sm *auth.SessionManager, templates map[string]*template.Template, staticFS fs.FS) http.Handler {
+func NewRouter(cfg *config.Config, store *db.Store, sm *auth.SessionManager, creds *auth.Credentials, templates map[string]*template.Template, staticFS fs.FS) http.Handler {
 	redirect := &RedirectHandler{store: store, domain: cfg.Domain}
 	homepage := &HomepageHandler{store: store, domain: cfg.Domain, templates: templates}
 	admin := &AdminHandler{store: store, domain: cfg.Domain, dataDir: cfg.DataDir, templates: templates}
+	api := &APIHandler{store: store, domain: cfg.Domain, creds: creds}
 
 	// Admin mux (handles everything under /admin)
 	adminMux := http.NewServeMux()
@@ -66,6 +67,12 @@ func NewRouter(cfg *config.Config, store *db.Store, sm *auth.SessionManager, tem
 		}
 		if strings.HasPrefix(path, "/uploads/") {
 			uploadsHandler.ServeHTTP(w, r)
+			return
+		}
+
+		// API
+		if path == "/api/shorten" && r.Method == http.MethodPost {
+			api.Shorten(w, r)
 			return
 		}
 

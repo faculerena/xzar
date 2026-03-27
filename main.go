@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -33,9 +35,29 @@ var templateFS embed.FS
 var staticFS embed.FS
 
 func main() {
-	if len(os.Args) >= 4 && os.Args[1] == "--genpass" {
-		genpass(os.Args[2], os.Args[3])
-		return
+	if len(os.Args) >= 2 {
+		switch os.Args[1] {
+		case "--genpass":
+			if len(os.Args) < 4 {
+				fmt.Fprintln(os.Stderr, "usage: xzar --genpass <username> <password>")
+				os.Exit(1)
+			}
+			genpass(os.Args[2], os.Args[3])
+			return
+		case "shorten":
+			if len(os.Args) < 3 {
+				fmt.Fprintln(os.Stderr, "usage: xzar shorten <url> [slug]")
+				fmt.Fprintln(os.Stderr, "env: XZAR_URL, XZAR_USER, XZAR_PASS")
+				os.Exit(1)
+			}
+			url := os.Args[2]
+			slug := ""
+			if len(os.Args) >= 4 {
+				slug = os.Args[3]
+			}
+			shorten(url, slug)
+			return
+		}
 	}
 
 	cfg := config.Load()
@@ -66,7 +88,7 @@ func main() {
 	sm := auth.NewSessionManager(cfg.SessionSecret, creds)
 	templates := parseTemplates()
 	staticSub, _ := fs.Sub(staticFS, "static")
-	h := handler.NewRouter(cfg, store, sm, templates, staticSub)
+	h := handler.NewRouter(cfg, store, sm, creds, templates, staticSub)
 
 	srv := &http.Server{Addr: cfg.Addr, Handler: h}
 
@@ -85,6 +107,38 @@ func main() {
 	defer cancel()
 	srv.Shutdown(ctx)
 	log.Println("shutdown complete")
+}
+
+func shorten(targetURL, slug string) {
+	apiURL := os.Getenv("XZAR_URL")
+	user := os.Getenv("XZAR_USER")
+	pass := os.Getenv("XZAR_PASS")
+	if apiURL == "" || user == "" || pass == "" {
+		log.Fatal("set XZAR_URL, XZAR_USER, and XZAR_PASS")
+	}
+
+	body, _ := json.Marshal(map[string]string{"url": targetURL, "slug": slug})
+	req, _ := http.NewRequest("POST", apiURL+"/api/shorten", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(user, pass)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	data, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		fmt.Fprintf(os.Stderr, "error: %s\n", data)
+		os.Exit(1)
+	}
+
+	var result struct {
+		ShortURL string `json:"short_url"`
+	}
+	json.Unmarshal(data, &result)
+	fmt.Println(result.ShortURL)
 }
 
 func genpass(username, password string) {
